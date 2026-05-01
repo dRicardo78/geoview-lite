@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "nombre": "Predio Ejemplo",
+        "area": "2.5 ha",
+        "propietario": "Juan Pérez"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-74.08, 4.70],
+            [-74.06, 4.70],
+            [-74.06, 4.72],
+            [-74.08, 4.72],
+            [-74.08, 4.70]
+          ]
+        ]
+      }
+    }
+  ]
+}

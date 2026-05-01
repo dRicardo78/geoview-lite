@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GeoView Lite</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+    <style>
+        body {
+            margin: 0;
+        }
+
+        #map {
+            height: 100vh;
+        }
+
+        /* Botón de geolocalización */
+        #btnLocate {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            padding: 10px;
+            background: white;
+            border: 1px solid gray;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<button id="btnLocate" onclick="locateUser()">📍 Ubicarme</button>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+    // ==============================
+    // INICIALIZACIÓN DEL MAPA
+    // ==============================
+    var map = L.map('map').setView([4.7110, -74.0721], 13);
+
+    // Mapa base
+    var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // ==============================
+    // VARIABLES DE CAPAS
+    // ==============================
+    var linderosLayer; // se define aquí para usarlo luego
+
+    // ==============================
+    // CARGA DE GEOJSON
+    // ==============================
+    fetch('data/predio.geojson')
+        .then(response => response.json())
+        .then(data => {
+
+            linderosLayer = L.geoJSON(data, {
+                style: {
+                    color: "blue",
+                    weight: 2,
+                    fillOpacity: 0.2
+                },
+                onEachFeature: function (feature, layer) {
+                    layer.bindPopup(
+                        "<b>" + feature.properties.nombre + "</b><br>" +
+                        "Área: " + feature.properties.area + "<br>" +
+                        "Propietario: " + feature.properties.propietario
+                    );
+                }
+            });
+
+            // ==============================
+            // CONTROL DE CAPAS
+            // ==============================
+            var baseMaps = {
+                "OpenStreetMap": osm
+            };
+
+            var overlayMaps = {
+                "Linderos": linderosLayer
+            };
+
+            L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+            // Activar capa por defecto
+            linderosLayer.addTo(map);
+
+            // Ajustar vista al predio
+            map.fitBounds(linderosLayer.getBounds());
+        })
+        .catch(error => console.error("Error cargando GeoJSON:", error));
+
+    // ==============================
+    // GEOLOCALIZACIÓN
+    // ==============================
+    var marker;
+
+    function locateUser() {
+        map.locate({ setView: true, maxZoom: 18 });
+    }
+
+    map.on('locationfound', function (e) {
+        if (marker) {
+            map.removeLayer(marker);
+        }
+
+        marker = L.marker(e.latlng).addTo(map)
+            .bindPopup("Estás aquí 📍")
+            .openPopup();
+    });
+
+    map.on('locationerror', function (e) {
+        alert("No se pudo obtener tu ubicación: " + e.message);
+    });
+
+</script>
+
+</body>
+</html>
