@@ -1,0 +1,317 @@
+body {
+  margin: 0;
+  font-family: Arial;
+}
+
+#map {
+  height: 100vh;
+  width: 100%;
+}
+
+/* El botón de ubicación se define en el CSS del documento HTML. */
+
+#panel {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    width: auto;
+    min-width: 280px;
+    max-width: 360px;
+    max-height: 85vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+#panel h2 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+}
+
+/* Estilos para formulario de edición */
+.campo-form {
+  margin-bottom: 12px;
+}
+
+.campo-form label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+  font-size: 13px;
+  color: #333;
+}
+
+.campo-form input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 13px;
+  font-family: Arial, sans-serif;
+}
+
+.campo-form input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
+}
+
+.campo-editable {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.campo-editable input {
+  flex: 1 1 120px;
+  min-width: 0;
+  padding: 6px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.campo-editable button {
+  padding: 6px 8px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  min-width: 32px;
+  transition: all 0.2s ease;
+}
+
+.campo-editable button:hover {
+  background: #c82333;
+  transform: scale(1.05);
+}
+
+#btnEditar:hover {
+  background: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+#btnGuardar {
+  transition: all 0.3s ease;
+}
+
+#btnGuardar {
+  width: 100%;
+}
+
+#btnGuardar:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+#btnCancelar {
+  width: 100%;
+}
+
+#btnCancelar:hover {
+  background: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+}
+
+#btnAgregarCampo:hover {
+  background: #218838;
+  transform: translateY(-2px);
+}
+
+#btnCerrarPanel {
+  color: #666;
+  transition: all 0.2s ease;
+}
+
+#btnCerrarPanel:hover {
+  color: #dc3545;
+  transform: scale(1.2);
+}
+
+#controls {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2000;
+  background: white;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+/* Notificación Toast */
+.notification {
+  position: fixed;
+  bottom: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #4CAF50;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  font-weight: bold;
+  z-index: 3000;
+  transition: bottom 0.4s ease;
+  max-width: 300px;
+  text-align: center;
+}
+
+.notification.show {
+  bottom: 30px;
+}
+
+/* Panel de Lista de Predios */
+#panelLista {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background: white;
+  padding: 15px 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  width: 250px;
+  max-height: 80vh;
+  overflow-y: auto;
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+}
+
+#panelLista h2 {
+  margin: 0 0 10px 0;
+  font-size: 15px;
+  color: #333;
+}
+
+#searchPredios {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 12px;
+  box-sizing: border-box;
+}
+
+#searchPredios:focus {
+  outline: none;
+  border-color: #3388ff;
+  box-shadow: 0 0 4px rgba(51, 136, 255, 0.3);
+}
+
+#listaPredios {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: calc(80vh - 120px);
+  overflow-y: auto;
+}
+
+#listaPredios li {
+  padding: 10px;
+  margin-bottom: 5px;
+  background: #f5f5f5;
+  border-left: 4px solid #3388ff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 12px;
+  word-break: break-word;
+}
+
+#listaPredios li:hover {
+  background: #e8f4f8;
+  border-left-color: #0056b3;
+  transform: translateX(4px);
+}
+
+#listaPredios li.selected {
+  background: #fff3cd;
+  border-left-color: #ffc107;
+  font-weight: bold;
+}
+
+#listaPredios li.empty {
+  text-align: center;
+  color: #999;
+  cursor: default;
+  background: #f9f9f9;
+  border-left-color: #ccc;
+}
+
+#listaPredios li.empty:hover {
+  background: #f9f9f9;
+  transform: none;
+}
+
+/* Scroll personalizado para el panel */
+#panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+#panel::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#panel::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+#panel::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+#listaPredios::-webkit-scrollbar {
+    width: 6px;
+}
+
+#listaPredios::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+#listaPredios::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+}
+
+#listaPredios::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Animaciones */
+#modoLectura {
+    animation: fadeIn 0.3s ease;
+}
+
+#modoEdicion {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { 
+        opacity: 0.8;
+        transform: translateY(-5px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

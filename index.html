@@ -7,6 +7,9 @@
 
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    
+    <!-- Estilos locales -->
+    <link rel="stylesheet" href="css/styles.css"/>
 
     <style>
         body {
@@ -52,75 +55,252 @@
 </head>
 <body>
 
-<button id="btnLocate" onclick="locateUser()" title="Ubicarme">📍</button>
+<button id="btnLocate" onclick="locateUser()" title="Ubicarme" style="position: absolute; bottom: 20px; right: 20px; width: 44px; height: 44px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; top: auto; left: auto;">📍</button>
 
 <div id="map"></div>
+
+<div id="panel">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h2 style="margin: 0;">📍 Predio</h2>
+    <button id="btnCerrarPanel" style="background: none; border: none; font-size: 20px; cursor: pointer; padding: 0; width: 24px; height: 24px;">✕</button>
+  </div>
+  <hr>
+  
+  <!-- Modo Lectura -->
+  <div id="modoLectura">
+    <p style="margin: 8px 0;"><b>Nombre:</b> <span id="p-nombre">Selecciona un predio</span></p>
+    <p style="margin: 8px 0;"><b>Área:</b> <span id="p-area">-</span></p>
+    <p style="margin: 8px 0;"><b>Propietario:</b> <span id="p-propietario">-</span></p>
+    <div id="camposExtras"></div>
+    <button id="btnEditar" style="display:none; margin-top:15px; padding:8px 12px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; transition: all 0.3s ease;">✏️ Editar Predio</button>
+  </div>
+
+  <!-- Modo Edición -->
+  <div id="modoEdicion" style="display:none;">
+    <form id="formEdicion">
+      <div class="campo-form">
+        <label>📝 Nombre:</label>
+        <input type="text" id="edit-nombre" placeholder="Nombre del predio">
+      </div>
+      <div class="campo-form">
+        <label>📐 Área:</label>
+        <input type="text" id="edit-area" placeholder="Ej: 300 m²">
+      </div>
+      <div class="campo-form">
+        <label>👤 Propietario:</label>
+        <input type="text" id="edit-propietario" placeholder="Nombre del propietario">
+      </div>
+      
+      <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; margin: 10px 0; background: #f9f9f9;">
+        <p style="margin: 0 0 8px 0; font-size: 12px; font-weight: bold; color: #666;">Campos Adicionales:</p>
+        <div id="camposEditables"></div>
+      </div>
+
+      <button type="button" id="btnAgregarCampo" style="margin-bottom:15px; padding:8px 10px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; width:100%; font-size:12px; font-weight:bold; transition: all 0.3s ease;">➕ Agregar Campo</button>
+      
+      <div style="display:flex; gap:10px; margin-top:15px; flex-wrap: wrap;">
+        <button type="button" id="btnGuardar" style="flex:1 1 120px; min-width:120px; padding:10px; background:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; transition: all 0.3s ease;">✓ Guardar cambios</button>
+        <button type="button" id="btnCancelar" style="flex:1 1 120px; min-width:120px; padding:10px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold; transition: all 0.3s ease;">✕ Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Lista de Predios -->
+<div id="panelLista">
+  <h2>📋 Predios Disponibles</h2>
+  <input type="text" id="searchPredios" placeholder="🔍 Buscar predio...">
+  <ul id="listaPredios">
+    <li class="empty">Cargando predios...</li>
+  </ul>
+</div>
+
+<div id="controls">
+  <input type="file" id="fileInput" accept=".geojson">
+</div>
+
+<!-- Notificación de éxito -->
+<div id="notification" class="notification"></div>
 
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-    // ==============================
-    // INICIALIZACIÓN DEL MAPA
-    // ==============================
-    var map = L.map('map').setView([4.7110, -74.0721], 13);
+    var map = L.map('map').setView([7.125, -73.119], 13);
 
-    // Mapa base
+    // ==============================
+    // CAPAS BASE
+    // ==============================
     var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
+    });
+
+    var satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Esri World Imagery'
     }).addTo(map);
 
-    // ==============================
-    // VARIABLES DE CAPAS
-    // ==============================
-    var linderosLayer; // se define aquí para usarlo luego
+    var capaSeleccionada = null;
+    var prediosData = []; // Almacenar todos los predios
+
+    var estiloDefault = {
+        color: "#3388ff",
+        weight: 2,
+        fillColor: "#3388ff",
+        fillOpacity: 0.3
+    };
+
+    var estiloSeleccionado = {
+        color: "yellow",
+        weight: 4,
+        fillColor: "yellow",
+        fillOpacity: 0.5
+    };
 
     // ==============================
-    // CARGA DE GEOJSON
+    // FUNCIÓN PARA ACTUALIZAR LA LISTA
+    // ==============================
+    function actualizarListaPredios() {
+        var listaPredios = document.getElementById('listaPredios');
+        
+        if (prediosData.length === 0) {
+            listaPredios.innerHTML = '<li class="empty">No hay predios cargados</li>';
+            return;
+        }
+
+        var html = '';
+        prediosData.forEach(function(predio, index) {
+            var nombre = predio.properties.nombre || "Predio sin nombre";
+            html += '<li data-index="' + index + '">' + nombre + '</li>';
+        });
+        listaPredios.innerHTML = html;
+
+        // Agregar eventos a los items
+        document.querySelectorAll('#listaPredios li:not(.empty)').forEach(function(item) {
+            item.addEventListener('click', function() {
+                var index = parseInt(this.dataset.index);
+                seleccionarPredioDesdeList(index);
+            });
+        });
+    }
+
+    // ==============================
+    // FUNCIÓN PARA SELECCIONAR DESDE LISTA
+    // ==============================
+    function seleccionarPredioDesdeList(index) {
+        if (index < 0 || index >= prediosData.length) return;
+
+        var predio = prediosData[index];
+
+        // Actualizar selección visual en la lista
+        document.querySelectorAll('#listaPredios li').forEach(function(li) {
+            li.classList.remove('selected');
+        });
+        document.querySelector('[data-index="' + index + '"]').classList.add('selected');
+
+        // Si existe layer, zoomear y resaltar
+        if (predio.layer) {
+            if (capaSeleccionada && capaSeleccionada !== predio.layer) {
+                capaSeleccionada.setStyle(estiloDefault);
+            }
+            capaSeleccionada = predio.layer;
+            predio.layer.setStyle(estiloSeleccionado);
+            map.fitBounds(predio.layer.getBounds(), { padding: [20, 20] });
+            predio.layer.openPopup();
+        }
+
+        // Mostrar detalles
+        mostrarDetallesPredio(index);
+    }
+
+    // ==============================
+    // FUNCIÓN PARA BUSCAR PREDIOS
+    // ==============================
+    document.getElementById('searchPredios').addEventListener('input', function(e) {
+        var searchTerm = e.target.value.toLowerCase();
+        var items = document.querySelectorAll('#listaPredios li:not(.empty)');
+
+        items.forEach(function(item) {
+            var nombre = item.textContent.toLowerCase();
+            if (nombre.includes(searchTerm)) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+
+    // ==============================
+    // CARGAR DATOS INICIALES
     // ==============================
     fetch('data/predio.geojson')
         .then(response => response.json())
         .then(data => {
 
-            linderosLayer = L.geoJSON(data, {
-                style: {
-                    color: "blue",
-                    weight: 2,
-                    fillOpacity: 0.2
-                },
+            var capa = L.geoJSON(data, {
+                style: function () { return estiloDefault; },
                 onEachFeature: function (feature, layer) {
-                    layer.bindPopup(
-                        "<b>" + feature.properties.nombre + "</b><br>" +
-                        "Área: " + feature.properties.area + "<br>" +
-                        "Propietario: " + feature.properties.propietario
-                    );
-                }
-            });
 
-            // ==============================
-            // CONTROL DE CAPAS
-            // ==============================
+                    // Guardar predio en array
+                    var predioObj = {
+                        properties: feature.properties,
+                        layer: layer
+                    };
+                    prediosData.push(predioObj);
+
+                    layer.bindPopup(`
+                        <div style="font-family: Arial; width: 220px;">
+                            <h3 style="margin:5px 0;">🏷️ ${feature.properties.nombre || "Predio"}</h3>
+                            <hr>
+                            <p>📐 <b>Área:</b> ${feature.properties.area || "No definida"}</p>
+                            <p>👤 <b>Propietario:</b> ${feature.properties.propietario || "No registrado"}</p>
+                        </div>
+                    `);
+
+                    layer.on('click', function () {
+                        console.log("CLICK EN PREDIO");
+
+                        if (capaSeleccionada && capaSeleccionada !== layer) {
+                            capaSeleccionada.setStyle(estiloDefault);
+                        }
+
+                        capaSeleccionada = layer;
+                        layer.setStyle(estiloSeleccionado);
+                        map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+                        layer.openPopup();
+                        
+                        // Actualizar panel de detalles
+                        var index = prediosData.indexOf(predioObj);
+                        mostrarDetallesPredio(index);
+
+                        // Actualizar selección en lista
+                        document.querySelectorAll('#listaPredios li').forEach(function(li) {
+                            li.classList.remove('selected');
+                        });
+                        if (index >= 0) {
+                            document.querySelector('[data-index="' + index + '"]').classList.add('selected');
+                        }
+                    });
+                }
+            }).addTo(map);
+
             var baseMaps = {
-                "OpenStreetMap": osm
+                "🗺️ Calles": osm,
+                "🛰️ Satélite": satelite
             };
 
             var overlayMaps = {
-                "Linderos": linderosLayer
+                "Predios": capa
             };
 
             L.control.layers(baseMaps, overlayMaps).addTo(map);
 
-            // Activar capa por defecto
-            linderosLayer.addTo(map);
+            map.fitBounds(capa.getBounds());
 
-            // Ajustar vista al predio
-            map.fitBounds(linderosLayer.getBounds());
+            // Actualizar lista
+            actualizarListaPredios();
         })
         .catch(error => console.error("Error cargando GeoJSON:", error));
 
-    // ==============================
-    // GEOLOCALIZACIÓN
-    // ==============================
     var marker;
 
     function locateUser() {
@@ -128,10 +308,7 @@
     }
 
     map.on('locationfound', function (e) {
-        if (marker) {
-            map.removeLayer(marker);
-        }
-
+        if (marker) map.removeLayer(marker);
         marker = L.marker(e.latlng).addTo(map)
             .bindPopup("Estás aquí 📍")
             .openPopup();
@@ -141,6 +318,320 @@
         alert("No se pudo obtener tu ubicación: " + e.message);
     });
 
+    // ==============================
+    // FUNCIÓN PARA MOSTRAR NOTIFICACIÓN
+    // ==============================
+    function showNotification(message, duration = 3000) {
+        var notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.classList.add('show');
+        
+        setTimeout(function() {
+            notification.classList.remove('show');
+        }, duration);
+    }
+
+    // ==============================
+    // CARGA DE ARCHIVOS GEOJSON
+    // ==============================
+    document.getElementById("fileInput").addEventListener("change", function (e) {
+        const file = e.target.files[0];
+
+        if (!file) return;
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+            try {
+                const geojson = JSON.parse(event.target.result);
+                console.log("Archivo GeoJSON cargado correctamente:", geojson);
+
+                // Validar que sea un GeoJSON válido
+                if (!geojson.type || !geojson.features) {
+                    throw new Error("El archivo no es un GeoJSON válido");
+                }
+
+                // Eliminar capa anterior si existe
+                if (window.capaGeoJSON) {
+                    map.removeLayer(window.capaGeoJSON);
+                    // Limpiar predios anteriores de esta capa
+                    prediosData = prediosData.filter(p => !p.fromUpload || p.fromUpload !== true);
+                }
+
+                // Crear nueva capa
+                window.capaGeoJSON = L.geoJSON(geojson, {
+                    style: function () { return estiloDefault; },
+                    onEachFeature: function (feature, layer) {
+                        
+                        // Guardar predio en array
+                        var predioObj = {
+                            properties: feature.properties,
+                            layer: layer,
+                            fromUpload: true
+                        };
+                        prediosData.push(predioObj);
+
+                        layer.bindPopup(`
+                            <div style="font-family: Arial; width: 220px;">
+                                <h3 style="margin:5px 0;">🏷️ ${feature.properties.nombre || "Predio"}</h3>
+                                <hr>
+                                <p>📐 <b>Área:</b> ${feature.properties.area || "No definida"}</p>
+                                <p>👤 <b>Propietario:</b> ${feature.properties.propietario || "No registrado"}</p>
+                            </div>
+                        `);
+
+                        layer.on('click', function () {
+                            if (capaSeleccionada && capaSeleccionada !== layer) {
+                                capaSeleccionada.setStyle(estiloDefault);
+                            }
+
+                            capaSeleccionada = layer;
+                            layer.setStyle(estiloSeleccionado);
+                            map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+                            layer.openPopup();
+                            
+                            // Actualizar panel de detalles
+                            var index = prediosData.indexOf(predioObj);
+                            mostrarDetallesPredio(index);
+
+                            // Actualizar selección en lista
+                            document.querySelectorAll('#listaPredios li').forEach(function(li) {
+                                li.classList.remove('selected');
+                            });
+                            if (index >= 0) {
+                                document.querySelector('[data-index="' + index + '"]').classList.add('selected');
+                            }
+                        });
+                    }
+                }).addTo(map);
+
+                // Ajustar vista a los nuevos predios
+                map.fitBounds(window.capaGeoJSON.getBounds());
+
+                // Actualizar lista de predios
+                actualizarListaPredios();
+
+                // Mostrar notificación de éxito
+                const cantidadPredios = geojson.features.length;
+                const mensaje = cantidadPredios === 1 
+                    ? "✅ 1 predio agregado" 
+                    : `✅ ${cantidadPredios} predios agregados`;
+                showNotification(mensaje);
+
+                // Limpiar input
+                document.getElementById("fileInput").value = "";
+
+            } catch (error) {
+                console.error("Error al cargar archivo:", error);
+                showNotification("❌ Error: " + error.message, 4000);
+                document.getElementById("fileInput").value = "";
+            }
+        };
+
+        reader.onerror = function () {
+            console.error("Error al leer el archivo");
+            showNotification("❌ Error al leer el archivo", 4000);
+            document.getElementById("fileInput").value = "";
+        };
+
+        reader.readAsText(file);
+    });
+
+    // ==============================
+    // VARIABLES DE EDICIÓN
+    // ==============================
+    var predioActualIndex = -1;
+
+    // ==============================
+    // MOSTRAR DATOS EN MODO LECTURA
+    // ==============================
+    function mostrarDetallesPredio(index) {
+        if (index < 0 || index >= prediosData.length) {
+            document.getElementById('btnEditar').style.display = 'none';
+            document.getElementById('panel').style.display = 'none';
+            return;
+        }
+
+        predioActualIndex = index;
+        var predio = prediosData[index];
+        var props = predio.properties;
+
+        document.getElementById('p-nombre').textContent = props.nombre || 'Sin nombre';
+        document.getElementById('p-area').textContent = props.area || '-';
+        document.getElementById('p-propietario').textContent = props.propietario || '-';
+
+        // Mostrar campos extra
+        var camposExtras = document.getElementById('camposExtras');
+        camposExtras.innerHTML = '';
+
+        var camposBase = ['nombre', 'area', 'propietario'];
+        for (var key in props) {
+            if (!camposBase.includes(key)) {
+                var div = document.createElement('div');
+                div.style.marginBottom = '8px';
+                div.innerHTML = '<p style="margin: 4px 0;"><b>' + key + ':</b> ' + (props[key] || '-') + '</p>';
+                camposExtras.appendChild(div);
+            }
+        }
+
+        document.getElementById('btnEditar').style.display = 'block';
+        document.getElementById('panel').style.display = 'block';
+        document.getElementById('modoEdicion').style.display = 'none';
+        document.getElementById('modoLectura').style.display = 'block';
+    }
+
+    // ==============================
+    // ACTIVAR MODO EDICIÓN
+    // ==============================
+    document.getElementById('btnEditar').addEventListener('click', function() {
+        if (predioActualIndex < 0) return;
+
+        var predio = prediosData[predioActualIndex];
+        var props = predio.properties;
+
+        // Llenar formulario
+        document.getElementById('edit-nombre').value = props.nombre || '';
+        document.getElementById('edit-area').value = props.area || '';
+        document.getElementById('edit-propietario').value = props.propietario || '';
+
+        // Mostrar campos extra en modo edición
+        var camposEditables = document.getElementById('camposEditables');
+        camposEditables.innerHTML = '';
+
+        var camposBase = ['nombre', 'area', 'propietario'];
+        for (var key in props) {
+            if (!camposBase.includes(key)) {
+                var div = document.createElement('div');
+                div.className = 'campo-editable';
+                div.innerHTML = '<input type="text" class="extra-field" data-key="' + key + '" value="' + (props[key] || '') + '">' +
+                    '<button type="button" class="btn-eliminar-campo" data-key="' + key + '">🗑️</button>';
+                camposEditables.appendChild(div);
+            }
+        }
+
+        // Agregar eventos a botones de eliminar
+        document.querySelectorAll('.btn-eliminar-campo').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                this.parentElement.remove();
+            });
+        });
+
+        // Cambiar modo
+        document.getElementById('modoLectura').style.display = 'none';
+        document.getElementById('modoEdicion').style.display = 'block';
+    });
+
+    // ==============================
+    // AGREGAR NUEVO CAMPO
+    // ==============================
+    document.getElementById('btnAgregarCampo').addEventListener('click', function(e) {
+        e.preventDefault();
+
+        var div = document.createElement('div');
+        div.className = 'campo-editable campo-nuevo';
+        div.innerHTML = '<input type="text" class="nombre-campo" placeholder="Nombre del campo">' +
+            '<input type="text" class="valor-campo" placeholder="Valor">' +
+            '<button type="button" class="btn-eliminar-campo">🗑️</button>';
+
+        document.getElementById('camposEditables').appendChild(div);
+
+        div.querySelector('.btn-eliminar-campo').addEventListener('click', function(e) {
+            e.preventDefault();
+            div.remove();
+        });
+    });
+
+    // ==============================
+    // GUARDAR EDICIONES
+    // ==============================
+    document.getElementById('btnGuardar').addEventListener('click', function(e) {
+        e.preventDefault();
+
+        if (predioActualIndex < 0) return;
+
+        var predio = prediosData[predioActualIndex];
+
+        // Actualizar campos base
+        predio.properties.nombre = document.getElementById('edit-nombre').value || 'Sin nombre';
+        predio.properties.area = document.getElementById('edit-area').value || '-';
+        predio.properties.propietario = document.getElementById('edit-propietario').value || '-';
+
+        // Actualizar campos extra existentes
+        document.querySelectorAll('.extra-field').forEach(function(input) {
+            var key = input.dataset.key;
+            predio.properties[key] = input.value;
+        });
+
+        // Eliminar campos que fueron borrados (comparar con los nuevos valores)
+        var camposActuales = Object.keys(predio.properties);
+        var camposEditables = Array.from(document.querySelectorAll('.extra-field')).map(i => i.dataset.key);
+        var camposBase = ['nombre', 'area', 'propietario'];
+
+        for (var key in predio.properties) {
+            if (!camposBase.includes(key) && !camposEditables.includes(key)) {
+                delete predio.properties[key];
+            }
+        }
+
+        // Agregar nuevos campos
+        document.querySelectorAll('.campo-nuevo').forEach(function(div) {
+            var nombreCampo = div.querySelector('.nombre-campo').value.trim();
+            var valorCampo = div.querySelector('.valor-campo').value.trim();
+
+            if (nombreCampo) {
+                predio.properties[nombreCampo] = valorCampo;
+            }
+        });
+
+        // Actualizar popup
+        if (predio.layer) {
+            predio.layer.setPopupContent(`
+                <div style="font-family: Arial; width: 220px;">
+                    <h3 style="margin:5px 0;">🏷️ ${predio.properties.nombre || "Predio"}</h3>
+                    <hr>
+                    <p>📐 <b>Área:</b> ${predio.properties.area || "No definida"}</p>
+                    <p>👤 <b>Propietario:</b> ${predio.properties.propietario || "No registrado"}</p>
+                </div>
+            `);
+        }
+
+        // Actualizar lista
+        actualizarListaPredios();
+
+        // Volver a modo lectura
+        document.getElementById('modoEdicion').style.display = 'none';
+        document.getElementById('modoLectura').style.display = 'block';
+
+        mostrarDetallesPredio(predioActualIndex);
+        showNotification("✅ Cambios guardados");
+    });
+
+    // ==============================
+    // CANCELAR EDICIÓN
+    // ==============================
+    document.getElementById('btnCancelar').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('modoEdicion').style.display = 'none';
+        document.getElementById('modoLectura').style.display = 'block';
+    });
+
+    // ==============================
+    // CERRAR PANEL
+    // ==============================
+    document.getElementById('btnCerrarPanel').addEventListener('click', function(e) {
+        e.preventDefault();
+        predioActualIndex = -1;
+        document.getElementById('panel').style.display = 'none';
+        document.getElementById('modoEdicion').style.display = 'none';
+        document.getElementById('modoLectura').style.display = 'block';
+        
+        // Deseleccionar en el mapa
+        if (capaSeleccionada) {
+            capaSeleccionada.setStyle(estiloDefault);
+            capaSeleccionada = null;
+        }
+    });
 </script>
 
 </body>

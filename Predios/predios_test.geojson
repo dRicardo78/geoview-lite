@@ -1,0 +1,41 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "nombre": "Predio A",
+        "area": "250 m²",
+        "propietario": "Juan Pérez"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-73.1195, 7.1202],
+          [-73.1192, 7.1202],
+          [-73.1192, 7.1199],
+          [-73.1195, 7.1199],
+          [-73.1195, 7.1202]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "nombre": "Predio B",
+        "area": "180 m²",
+        "propietario": "María Gómez"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-73.1199, 7.1204],
+          [-73.1196, 7.1204],
+          [-73.1196, 7.1201],
+          [-73.1199, 7.1201],
+          [-73.1199, 7.1204]
+        ]]
+      }
+    }
+  ]
+}
