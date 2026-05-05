@@ -50,12 +50,13 @@ body {
 
 .campo-form input {
   width: 100%;
-  padding: 8px;
+  padding: 12px;
   border: 1px solid #ddd;
   border-radius: 4px;
   box-sizing: border-box;
-  font-size: 13px;
+  font-size: 14px;
   font-family: Arial, sans-serif;
+  transition: all 0.2s ease;
 }
 
 .campo-form input:focus {
@@ -67,30 +68,41 @@ body {
 .campo-editable {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: 10px;
   align-items: center;
 }
 
 .campo-editable input {
   flex: 1 1 120px;
   min-width: 0;
-  padding: 6px;
+  padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.campo-editable input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 4px rgba(0, 123, 255, 0.3);
 }
 
 .campo-editable button {
-  padding: 6px 8px;
+  padding: 8px 10px;
   background: #dc3545;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 11px;
-  min-width: 32px;
+  font-size: 12px;
+  min-width: 44px;
+  min-height: 44px;
   transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .campo-editable button:hover {
@@ -141,6 +153,7 @@ body {
 #btnCerrarPanel:hover {
   color: #dc3545;
   transform: scale(1.2);
+  background: #f5f5f5;
 }
 
 #controls {
@@ -149,8 +162,33 @@ body {
   left: 10px;
   z-index: 2000;
   background: white;
-  padding: 8px;
+  padding: 0;
   border-radius: 6px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+
+#controls label {
+  display: block !important;
+  margin: 0;
+  padding: 12px 16px;
+  background: white;
+  border: none;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+#controls label:hover {
+  background: #f5f5f5;
+}
+
+#controls label:active {
+  background: #e8e8e8;
 }
 
 /* Notificación Toast */
@@ -316,27 +354,213 @@ body {
     }
 }
 
-@media (max-width: 840px) {
-    #panel,
-    #panelLista,
-    #controls {
+/* Estilos para popups del mapa */
+.leaflet-popup-content {
+    font-size: 13px;
+}
+
+.leaflet-popup-content h3 {
+    margin: 5px 0 8px 0;
+    font-size: 14px;
+}
+
+.leaflet-popup-content p {
+    margin: 4px 0;
+    font-size: 12px;
+}
+
+.leaflet-popup-content hr {
+    margin: 6px 0;
+}
+
+/* ====================================
+   RESPONSIVE - TABLETS (840px - 1024px)
+   ==================================== */
+@media (max-width: 1024px) {
+    #panel {
+        max-width: 320px;
+    }
+
+    #panelLista {
+        width: 240px;
+    }
+
+    .leaflet-popup-content {
+        font-size: 12px;
+        width: auto !important;
+        max-width: 200px;
+    }
+}
+
+/* ====================================
+   RESPONSIVE - MOBILE (max 768px)
+   ==================================== */
+@media (max-width: 768px) {
+    #panel {
+        position: fixed;
+        top: 10px;
         left: 10px;
         right: 10px;
         width: auto;
         max-width: none;
-    }
-
-    #panel {
-        top: 10px;
         max-height: 45vh;
+        padding: 12px 15px;
     }
 
     #panelLista {
+        position: fixed;
         top: auto;
-        bottom: 10px;
+        right: 10px;
+        bottom: 75px;
+        left: 10px;
+        width: auto;
+        max-width: none;
+        max-height: 40vh;
+        padding: 12px 15px;
+        z-index: 1001;
+    }
+
+    #panelLista h2 {
+        font-size: 14px;
+        margin: 0 0 8px 0;
+    }
+
+    #searchPredios {
+        padding: 10px;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    #listaPredios {
+        max-height: calc(40vh - 100px);
+    }
+
+    #listaPredios li {
+        padding: 12px;
+        font-size: 13px;
+        margin-bottom: 4px;
     }
 
     #controls {
-        bottom: 85px;
+        position: fixed;
+        bottom: 75px;
+        left: 10px;
+        right: 10px;
+        z-index: 2000;
+        width: auto;
+    }
+
+    #controls label {
+        padding: 12px 16px !important;
+        font-size: 14px;
+    }
+
+    #btnLocate {
+        width: 52px;
+        height: 52px;
+        font-size: 24px;
+        bottom: 130px;
+        right: 10px;
+    }
+
+    .campo-form input,
+    .campo-editable input {
+        padding: 12px;
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    .campo-form label {
+        font-size: 14px;
+    }
+
+    button:not(#btnCerrarPanel) {
+        min-height: 44px;
+        padding: 12px 16px !important;
+        font-size: 14px;
+    }
+
+    #panel h2 {
+        font-size: 15px;
+    }
+
+    .leaflet-popup-content {
+        font-size: 13px !important;
+        max-width: 180px;
+    }
+}
+
+/* ====================================
+   RESPONSIVE - SMALL MOBILE (max 480px)
+   ==================================== */
+@media (max-width: 480px) {
+    #panel {
+        max-height: 50vh;
+    }
+
+    #panelLista {
+        max-height: 42vh;
+        bottom: 70px;
+    }
+
+    #btnLocate {
+        width: 48px;
+        height: 48px;
+        font-size: 22px;
+        bottom: 125px;
+        right: 8px;
+    }
+
+    #controls {
+        bottom: 70px;
+        left: 8px;
+        right: 8px;
+    }
+
+    #controls label {
+        padding: 10px !important;
+        font-size: 12px;
+    }
+
+    .campo-form,
+    .campo-editable {
+        margin-bottom: 10px;
+    }
+
+    .campo-editable {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .campo-editable input {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .campo-editable button {
+        width: 100%;
+    }
+
+    #btnEditar,
+    #btnGuardar,
+    #btnCancelar,
+    #btnAgregarCampo {
+        width: 100%;
+        margin: 8px 0;
+    }
+
+    #btnGuardar,
+    #btnCancelar {
+        flex: 1 !important;
+        min-width: auto !important;
+    }
+
+    div[style*="display:flex"][style*="gap"] button {
+        flex: 1 !important;
+        min-width: auto !important;
+    }
+
+    .leaflet-popup-content {
+        max-width: 160px !important;
     }
 }

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Predios de Prueba</name>
+    <description>Archivo KML de prueba para GeoView Lite</description>
+    
+    <Placemark>
+      <name>Predio Test 1</name>
+      <description>Predio de prueba número 1</description>
+      <ExtendedData>
+        <Data name="nombre">
+          <value>Predio Test 1</value>
+        </Data>
+        <Data name="area">
+          <value>250 m²</value>
+        </Data>
+        <Data name="propietario">
+          <value>Juan Pérez</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -73.11900,7.12500,0
+              -73.11850,7.12500,0
+              -73.11850,7.12550,0
+              -73.11900,7.12550,0
+              -73.11900,7.12500,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+
+    <Placemark>
+      <name>Predio Test 2</name>
+      <description>Predio de prueba número 2</description>
+      <ExtendedData>
+        <Data name="nombre">
+          <value>Predio Test 2</value>
+        </Data>
+        <Data name="area">
+          <value>350 m²</value>
+        </Data>
+        <Data name="propietario">
+          <value>María García</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -73.12000,7.12300,0
+              -73.11950,7.12300,0
+              -73.11950,7.12350,0
+              -73.12000,7.12350,0
+              -73.12000,7.12300,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+
+    <Placemark>
+      <name>Predio Test 3</name>
+      <description>Predio de prueba número 3</description>
+      <ExtendedData>
+        <Data name="nombre">
+          <value>Predio Test 3</value>
+        </Data>
+        <Data name="area">
+          <value>400 m²</value>
+        </Data>
+        <Data name="propietario">
+          <value>Carlos López</value>
+        </Data>
+      </ExtendedData>
+      <Polygon>
+        <outerBoundaryIs>
+          <LinearRing>
+            <coordinates>
+              -73.11800,7.12700,0
+              -73.11750,7.12700,0
+              -73.11750,7.12750,0
+              -73.11800,7.12750,0
+              -73.11800,7.12700,0
+            </coordinates>
+          </LinearRing>
+        </outerBoundaryIs>
+      </Polygon>
+    </Placemark>
+
+  </Document>
+</kml>
