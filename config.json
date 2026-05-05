@@ -1,0 +1,101 @@
+{
+  "system": {
+    "version": "1.0",
+    "name": "GeoView 3D - Pipeline LAZ",
+    "description": "Sistema completo de visualización de nubes de puntos LiDAR",
+    "author": "GeoView Team",
+    "created": "2026-05-05"
+  },
+  "configuration": {
+    "server": {
+      "host": "localhost",
+      "port": 8000,
+      "protocol": "http"
+    },
+    "viewer_3d": {
+      "default_point_budget": 1000000,
+      "max_point_budget": 10000000,
+      "default_fov": 60,
+      "camera": {
+        "near": 0.1,
+        "far": 100000,
+        "default_position": [0, 50, 100]
+      },
+      "edl_enabled": true,
+      "lod_metric": "geometric"
+    },
+    "viewer_2d": {
+      "default_zoom": 13,
+      "default_center": [7.125, -73.119],
+      "base_tiles": "satellite"
+    }
+  },
+  "datasets": [
+    {
+      "id": "dataset-001",
+      "enabled": false,
+      "name": "Nube de Prueba",
+      "description": "Estructura ejemplo para dataset",
+      "path": "dataset-001/cloud.js",
+      "metadata": {
+        "points": 50000000,
+        "source": "LiDAR Scanner",
+        "conversion_date": "2024-01-15",
+        "software": "PotreeConverter 2.0",
+        "point_budget_recommended": 1000000,
+        "bounds": {
+          "min": {"x": -100, "y": -100, "z": -10},
+          "max": {"x": 1000, "y": 1000, "z": 500}
+        },
+        "crs": "EPSG:4326",
+        "accuracy": "±0.05m"
+      },
+      "thumbnail": "dataset-001/thumbnail.jpg",
+      "sync_to_2d": {
+        "enabled": true,
+        "center_lat": 7.125,
+        "center_lon": -73.119
+      }
+    }
+  ],
+  "conversion": {
+    "potree_converter": {
+      "version": "2.0.0",
+      "point_limit": 30000,
+      "cubic_meter": true,
+      "color_range": "auto"
+    },
+    "supported_formats": [".laz", ".las", ".e57", ".ply"],
+    "output_format": "potree_octree"
+  },
+  "performance": {
+    "point_budgets": {
+      "low": 500000,
+      "medium": 1000000,
+      "high": 2000000,
+      "ultra": 5000000
+    },
+    "recommended_by_device": {
+      "mobile": "500K",
+      "tablet": "1M",
+      "desktop": "2M",
+      "workstation": "5M+"
+    }
+  },
+  "ui": {
+    "panels": {
+      "control": true,
+      "info": true,
+      "sync": true,
+      "loading": true
+    },
+    "theme": "dark",
+    "accent_color": "#00d4ff"
+  },
+  "sync_2d_3d": {
+    "enabled": true,
+    "method": "postMessage",
+    "bidirectional": true,
+    "auto_center": true
+  }
+}

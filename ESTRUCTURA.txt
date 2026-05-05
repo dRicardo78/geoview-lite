@@ -1,0 +1,243 @@
+geoview-lite/
+│
+├── 🌐 VISORES PRINCIPALES
+│   ├── 📄 index.html                      ⭐ VISOR 2D (Leaflet)
+│   │   ├── Mapa satelital interactivo
+│   │   ├── Gestión de predios
+│   │   ├── Importación GeoJSON/KML
+│   │   ├── Edición de propiedades
+│   │   ├── Botón "Ver en 3D"
+│   │   └── Sincronización con visor 3D (window.postMessage)
+│   │
+│   └── 3d-viewer/visor-3d.html            ⭐ VISOR 3D (Potree)
+│       ├── Renderizado de nubes LiDAR
+│       ├── Point Budget slider (500K-10M)
+│       ├── Selector de datasets
+│       ├── Modos visualización (RGB, Altura, Intensidad, Clasificación)
+│       ├── Panel de información en tiempo real (FPS, puntos, distancia)
+│       ├── Panel de sincronización 2D
+│       └── Recepción de coordenadas desde visor 2D
+│
+├── 🎨 ESTILOS
+│   └── css/styles.css                    Estilos del mapa 2D
+│
+├── 📦 DATOS Y CONFIGURACIÓN
+│   ├── config.json                       ⚙️ Configuración central del sistema
+│   │   ├── Viewer 3D settings
+│   │   ├── Viewer 2D settings
+│   │   ├── Performance tuning
+│   │   └── Sync configuration
+│   │
+│   ├── data/
+│   │   ├── predio.geojson                Predios de ejemplo
+│   │   └── predio_test.kml               (Opcional) Datos KML de prueba
+│   │
+│   └── datasets-3d/
+│       ├── index.json                    📑 Índice de datasets LiDAR
+│       │   └── Lista de nubes disponibles
+│       │       ├── ID y nombre
+│       │       ├── Ruta a cloud.js
+│       │       ├── Metadata (puntos, área, resolución)
+│       │       └── Configuración de sincronización
+│       │
+│       ├── dataset-001/                  (Estructura esperada)
+│       │   ├── cloud.js                  Descriptor Potree
+│       │   ├── cloud.json                Metadata JSON
+│       │   └── octree/                   Estructura jerárquica de niveles
+│       │       ├── r/                    Root level (LoD 0)
+│       │       ├── r/0/
+│       │       ├── r/1/
+│       │       ├── r/2/
+│       │       └── ...
+│       │
+│       └── (más datasets aquí)
+│
+├── 🔧 HERRAMIENTAS DE CONVERSIÓN
+│   └── tools/
+│       ├── convert.bat                   Windows: PotreeConverter wrapper
+│       │   └── Uso: convert.bat archivo.laz nombre-dataset
+│       │
+│       ├── convert.sh                    Linux/macOS: PotreeConverter wrapper
+│       │   └── Uso: ./convert.sh archivo.laz nombre-dataset
+│       │
+│       └── PotreeConverter/              (⬇️ Descargar manualmente)
+│           └── PotreeConverter.exe       Software de conversión LAZ → Potree
+│
+├── 📚 DOCUMENTACIÓN
+│   ├── 🌟 INICIO_RAPIDO.md               ⚡ Empezar en 5 minutos
+│   │   ├── Iniciar servidor
+│   │   ├── Usar visor 2D
+│   │   ├── Cargar archivos
+│   │   ├── Troubleshooting rápido
+│   │   └── Tips y trucos
+│   │
+│   ├── 📖 README.md                      Documentación completa
+│   │   ├── Descripción general
+│   │   ├── Estructura del proyecto
+│   │   ├── Características
+│   │   ├── Rendimiento
+│   │   ├── Sincronización 2D↔3D
+│   │   └── Troubleshooting detallado
+│   │
+│   ├── 🔄 PIPELINE_LAZ_3D.md             Guía de conversión LiDAR
+│   │   ├── Instalación PotreeConverter
+│   │   ├── Conversión LAZ → Potree
+│   │   ├── Configuración de servidor
+│   │   ├── Optimización de rendimiento
+│   │   ├── Conceptos LoD y Point Budget
+│   │   ├── Modos de visualización
+│   │   └── Troubleshooting técnico
+│   │
+│   ├── ✅ CHECKLIST.md                   Verificación de instalación
+│   │   ├── Verificar estructura
+│   │   ├── Iniciar servidor
+│   │   ├── Probar visor 2D
+│   │   ├── Probar visor 3D
+│   │   ├── Configurar PotreeConverter
+│   │   ├── Agregar datasets
+│   │   ├── Troubleshooting por síntoma
+│   │   └── Tabla de verificación final
+│   │
+│   ├── 📄 LICENSE                        Licencia MIT
+│   └── 📄 ESTRUCTURA.txt                 Este archivo
+│
+├── 📊 DATOS DE EJEMPLO
+│   └── Predios/
+│       ├── predios_test.geojson          Datos de prueba 1
+│       └── predios_test2.geojson         Datos de prueba 2
+│
+└── 🗂️ PROYECTO QGIS
+    └── QGIS/VisorQGIS.qgz                Referencia del visor original
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌟 FASES DEL SISTEMA (TODAS COMPLETAS ✅)
+
+FASE 0: Separación de Arquitectura
+├── Visor 2D independiente (Leaflet)
+├── Visor 3D separado (Potree)
+└── Sin conflictos de frameworks ✅
+
+FASE 1-3: Entrada y Conversión
+├── Acepta: GeoJSON, KML, LAZ (con conversión previa)
+├── PotreeConverter: Windows + Linux scripts
+└── Servidor HTTP: Requisito obligatorio ✅
+
+FASE 4-5: Renderizado e Interacción
+├── Potree 1.8.8 con WebGL optimizado
+├── Point Budget: 500K-10M configurable
+├── Modos visualización: RGB, Altura, Intensidad, Clasificación
+└── UI intuitiva con controles principales ✅
+
+FASE 6: Sincronización 2D ↔ 3D
+├── Click "Ver en 3D" en visor 2D
+├── Abre visor 3D sincronizado
+├── Envía [lat, lon] del predio
+├── Recibe posición 3D de vuelta (window.postMessage)
+└── Navegación integrada completa ✅
+
+FASE 7-8: Gestión de Datasets + Automatización
+├── config.json: Configuración centralizada
+├── datasets-3d/index.json: Índice de nubes
+├── Scripts batch: convert.bat y convert.sh
+├── Estructura normalizada de datasets
+└── Sistema profesional listo para producción ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 ARCHIVOS CLAVE POR FUNCIONALIDAD
+
+┌─ Funcionalidad: VISOR 2D (Leaflet) ─────────────────────────────┐
+│ Archivos: index.html, css/styles.css                             │
+│ Funciones principales:                                           │
+│  • Cargar mapa base (satélite/calles)                             │
+│  • Renderizar predios desde GeoJSON/KML                          │
+│  • Panel lateral con detalles                                    │
+│  • Edición de propiedades                                        │
+│  • Sincronización con visor 3D                                   │
+│  • Importación de archivos                                       │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ Funcionalidad: VISOR 3D (Potree) ──────────────────────────────┐
+│ Archivos: 3d-viewer/visor-3d.html                                │
+│ Funciones principales:                                           │
+│  • Renderizar nubes de puntos LiDAR                              │
+│  • Point Budget slider (rendimiento)                             │
+│  • Selector de datasets dinámico                                 │
+│  • Modos de visualización                                        │
+│  • Panel de información en tiempo real                           │
+│  • Sincronización inversa con visor 2D                           │
+│  • Reseteo de vista                                              │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ Funcionalidad: CONVERSIÓN LAZ ─────────────────────────────────┐
+│ Herramientas: tools/convert.bat, tools/convert.sh               │
+│ Requisito: PotreeConverter (descargar y extraer)                 │
+│ Proceso:                                                         │
+│  1. Descargar PotreeConverter desde GitHub                       │
+│  2. Extraer en tools/PotreeConverter/                            │
+│  3. Ejecutar: convert.bat archivo.laz nombre                    │
+│  4. Verificar salida en datasets-3d/nombre/                      │
+│  5. Habilitar en datasets-3d/index.json                          │
+└──────────────────────────────────────────────────────────────────┘
+
+┌─ Funcionalidad: CONFIGURACIÓN ──────────────────────────────────┐
+│ Archivos: config.json, datasets-3d/index.json                   │
+│ Ajustes principales:                                             │
+│  • Point Budget (rendimiento 3D)                                 │
+│  • FOV (campo de visión)                                         │
+│  • Centro y zoom del mapa 2D                                     │
+│  • Habilitación/deshabilitación de datasets                      │
+│  • Tema y colores                                                │
+└──────────────────────────────────────────────────────────────────┘
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 FLUJO DE USUARIO
+
+Usuario abre: http://localhost:8000
+           ↓
+   [VISOR 2D - Leaflet]
+   • Ve mapa con predios
+   • Selecciona predio → Panel detalles
+   • Edita propiedades
+           ↓
+   Click "Ver en 3D" (botón 🎯)
+           ↓
+   [Se abre VISOR 3D - Potree]
+   • Recibe [lat, lon] del predio
+   • Carga dataset LiDAR
+   • Centra cámara en coordenadas
+           ↓
+   Usuario explora nube 3D
+   • Rotación (mouse izquierdo)
+   • Zoom (rueda mouse)
+   • Desplazamiento (mouse derecho)
+   • Ajusta Point Budget y FOV
+           ↓
+   (Opcional) Envía posición 3D → Visor 2D
+           ↓
+   Experiencia sincronizada completa ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 ESTADÍSTICAS DEL PROYECTO
+
+Total de archivos:              15+
+Líneas de código HTML/JS:       ~1,500
+Documentación (markdown):       ~1,200 líneas
+Frameworks:                     Leaflet + Potree + Three.js
+Tamaño (sin datasets):          ~500 KB
+Requisitos mínimos:             Python 3.6+ o Node.js 12+
+
+FASES IMPLEMENTADAS:            8/8 ✅
+SINCRONIZACIÓN:                 Bidireccional ✅
+RENDIMIENTO:                    Optimizado (LoD + Point Budget) ✅
+LICENCIA:                        MIT ✅
+ESTADO:                          ✅ Producción
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Última actualización: 5 de mayo de 2026
+Versión: 1.0 - Pipeline LAZ Completo
+Documentación: Completa y lista para usuarios finales

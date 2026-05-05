@@ -1,0 +1,46 @@
+{
+  "datasets": [
+    {
+      "id": "example-01",
+      "name": "Ejemplo - Nube de Demostración",
+      "description": "Estructura ejemplo para cargar datasets",
+      "path": "example-01/cloud.js",
+      "enabled": false,
+      "metadata": {
+        "points_total": 50000000,
+        "source": "LiDAR Aéreo",
+        "conversion_date": "2024-01-15",
+        "software": "PotreeConverter 2.0",
+        "point_budget": 1000000,
+        "area_km2": 25.5,
+        "resolution_cm": 5,
+        "accuracy_m": 0.05,
+        "bounds": {
+          "min": {"x": -100, "y": -100, "z": -10},
+          "max": {"x": 1000, "y": 1000, "z": 500}
+        },
+        "crs": "EPSG:4326"
+      },
+      "sync": {
+        "enabled": true,
+        "center_lat": 7.125,
+        "center_lon": -73.119,
+        "center_height": 50,
+        "zoom_level": 13
+      },
+      "render_modes": ["RGB", "HEIGHT", "INTENSITY", "CLASSIFICATION"]
+    }
+  ],
+  "stats": {
+    "total_datasets": 1,
+    "total_points_all": 50000000,
+    "storage_gb": 15.2,
+    "last_updated": "2024-01-15"
+  },
+  "settings": {
+    "auto_load_first": true,
+    "point_budget_default": 1000000,
+    "fov_default": 60,
+    "edl_enabled": true
+  }
+}
