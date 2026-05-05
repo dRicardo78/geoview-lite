@@ -138,15 +138,14 @@
 
 <div id="controls">
   <label for="fileInput" style="display: block; padding: 12px; background: white; border: 1px solid #ddd; border-radius: 6px; text-align: center; cursor: pointer; font-weight: bold; font-size: 13px; transition: all 0.3s ease; min-height: 44px; display: flex; align-items: center; justify-content: center;">
-    📁 Seleccionar archivo
+    📁 Seleccionar archivo (KML o GeoJSON)
   </label>
-  <input type="file" id="fileInput" accept=".geojson" style="display: none;">
+  
+  <input type="file" id="fileInput" accept=".kml,.geojson" style="display: none;">
 </div>
 
-<!-- Notificación de éxito -->
 <div id="notification" class="notification"></div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
@@ -343,6 +342,193 @@
     });
 
     // ==============================
+    // DETECCIÓN Y CONVERSIÓN DE ARCHIVOS
+    // ==============================
+    
+    /**
+     * Detecta el tipo de archivo por extensión
+     * @param {String} nombreArchivo - Nombre del archivo
+     * @returns {String} 'kml' o 'geojson'
+     */
+    function detectarTipoArchivo(nombreArchivo) {
+        if (nombreArchivo.toLowerCase().endsWith('.kml')) {
+            return 'kml';
+        } else if (nombreArchivo.toLowerCase().endsWith('.geojson')) {
+            return 'geojson';
+        }
+        return null;
+    }
+
+    /**
+     * Convierte KML a GeoJSON usando parsing XML nativo (sin librerías externas)
+     * @param {String} kmlText - Contenido del archivo KML como texto
+     * @returns {Object} GeoJSON convertido
+     */
+    function convertirKMLaGeoJSON(kmlText) {
+        try {
+            // Parsear el XML del KML
+            const parser = new DOMParser();
+            const kmlDOM = parser.parseFromString(kmlText, 'text/xml');
+            
+            // Verificar si hay error de parseo
+            if (kmlDOM.getElementsByTagName('parsererror').length > 0) {
+                throw new Error('El archivo KML no es un XML válido');
+            }
+            
+            // Inicializar array de features
+            const features = [];
+            
+            // Obtener todos los Placemarks
+            const placemarks = kmlDOM.getElementsByTagName('Placemark');
+            
+            for (let i = 0; i < placemarks.length; i++) {
+                const placemark = placemarks[i];
+                const feature = {};
+                
+                // Obtener nombre
+                const nameEl = placemark.getElementsByTagName('Name')[0] || placemark.getElementsByTagName('name')[0];
+                const name = nameEl ? nameEl.textContent : 'Feature ' + i;
+                
+                // Obtener descripción
+                const descEl = placemark.getElementsByTagName('Description')[0] || placemark.getElementsByTagName('description')[0];
+                const description = descEl ? descEl.textContent : '';
+                
+                // Obtener propiedades extendidas
+                const properties = {
+                    'nombre': name,
+                    'descripcion': description
+                };
+                
+                // Extraer datos ExtendedData
+                const dataElements = placemark.getElementsByTagName('Data');
+                for (let j = 0; j < dataElements.length; j++) {
+                    const dataEl = dataElements[j];
+                    const key = dataEl.getAttribute('name');
+                    const valueEl = dataEl.getElementsByTagName('value')[0];
+                    if (key && valueEl) {
+                        properties[key] = valueEl.textContent;
+                    }
+                }
+                
+                // Obtener geometría
+                let geometry = null;
+                
+                // Intentar obtener Polygon
+                const polygonEl = placemark.getElementsByTagName('Polygon')[0];
+                if (polygonEl) {
+                    geometry = extraerPolygon(polygonEl);
+                }
+                
+                // Si no hay Polygon, intentar Point
+                if (!geometry) {
+                    const pointEl = placemark.getElementsByTagName('Point')[0];
+                    if (pointEl) {
+                        geometry = extraerPoint(pointEl);
+                    }
+                }
+                
+                // Si no hay Point, intentar LineString
+                if (!geometry) {
+                    const lineEl = placemark.getElementsByTagName('LineString')[0];
+                    if (lineEl) {
+                        geometry = extraerLineString(lineEl);
+                    }
+                }
+                
+                // Si hay geometría, crear feature
+                if (geometry) {
+                    features.push({
+                        type: 'Feature',
+                        properties: properties,
+                        geometry: geometry
+                    });
+                }
+            }
+            
+            // Retornar GeoJSON
+            const geojson = {
+                type: 'FeatureCollection',
+                features: features
+            };
+            
+            console.log("KML convertido a GeoJSON:", geojson);
+            return geojson;
+            
+        } catch (error) {
+            console.error("Error en conversión KML:", error);
+            throw new Error("Error al convertir KML: " + error.message);
+        }
+    }
+    
+    /**
+     * Extrae coordenadas de un elemento Point
+     */
+    function extraerPoint(pointEl) {
+        const coordEl = pointEl.getElementsByTagName('coordinates')[0];
+        if (!coordEl) return null;
+        
+        const coords = coordEl.textContent.trim().split(/\s+/)[0].split(',');
+        if (coords.length < 2) return null;
+        
+        return {
+            type: 'Point',
+            coordinates: [parseFloat(coords[0]), parseFloat(coords[1])]
+        };
+    }
+    
+    /**
+     * Extrae coordenadas de un elemento LineString
+     */
+    function extraerLineString(lineEl) {
+        const coordEl = lineEl.getElementsByTagName('coordinates')[0];
+        if (!coordEl) return null;
+        
+        const coordsText = coordEl.textContent.trim();
+        const coordPairs = coordsText.split(/\s+/).filter(c => c.includes(','));
+        
+        const coordinates = coordPairs.map(pair => {
+            const coords = pair.split(',');
+            return [parseFloat(coords[0]), parseFloat(coords[1])];
+        });
+        
+        if (coordinates.length < 2) return null;
+        
+        return {
+            type: 'LineString',
+            coordinates: coordinates
+        };
+    }
+    
+    /**
+     * Extrae coordenadas de un elemento Polygon
+     */
+    function extraerPolygon(polygonEl) {
+        const outerEl = polygonEl.getElementsByTagName('outerBoundaryIs')[0];
+        if (!outerEl) return null;
+        
+        const linearRing = outerEl.getElementsByTagName('LinearRing')[0];
+        if (!linearRing) return null;
+        
+        const coordEl = linearRing.getElementsByTagName('coordinates')[0];
+        if (!coordEl) return null;
+        
+        const coordsText = coordEl.textContent.trim();
+        const coordPairs = coordsText.split(/\s+/).filter(c => c.includes(','));
+        
+        const coordinates = coordPairs.map(pair => {
+            const coords = pair.split(',');
+            return [parseFloat(coords[0]), parseFloat(coords[1])];
+        });
+        
+        if (coordinates.length < 3) return null;
+        
+        return {
+            type: 'Polygon',
+            coordinates: [coordinates]
+        };
+    }
+
+    // ==============================
     // FUNCIÓN PARA MOSTRAR NOTIFICACIÓN
     // ==============================
     function showNotification(message, duration = 3000) {
@@ -356,33 +542,54 @@
     }
 
     // ==============================
-    // CARGA DE ARCHIVOS GEOJSON
+    // CARGA DE ARCHIVOS (KML y GeoJSON)
     // ==============================
     document.getElementById("fileInput").addEventListener("change", function (e) {
         const file = e.target.files[0];
 
         if (!file) return;
 
+        // Detectar tipo de archivo
+        const tipoArchivo = detectarTipoArchivo(file.name);
+        console.log("Tipo de archivo detectado:", tipoArchivo);
+
+        if (!tipoArchivo) {
+            showNotification("❌ Formato no soportado. Use .kml o .geojson", 4000);
+            document.getElementById("fileInput").value = "";
+            return;
+        }
+
         const reader = new FileReader();
 
         reader.onload = function (event) {
             try {
-                const geojson = JSON.parse(event.target.result);
-                console.log("Archivo GeoJSON cargado correctamente:", geojson);
+                let geojson;
 
-                // Validar que sea un GeoJSON válido
-                if (!geojson.type || !geojson.features) {
-                    throw new Error("El archivo no es un GeoJSON válido");
+                // Decidir flujo según tipo de archivo
+                if (tipoArchivo === 'kml') {
+                    // Convertir KML a GeoJSON
+                    console.log("Convirtiendo KML a GeoJSON...");
+                    geojson = convertirKMLaGeoJSON(event.target.result);
+                    console.log("Conversión exitosa:", geojson);
+                } else {
+                    // Procesar como GeoJSON directamente
+                    geojson = JSON.parse(event.target.result);
+                    console.log("Archivo GeoJSON cargado correctamente:", geojson);
                 }
 
-                // Eliminar capa anterior si existe
+                // Validar que sea un GeoJSON válido
+                if (!geojson || !geojson.type || !geojson.features) {
+                    throw new Error("El archivo no contiene datos válidos");
+                }
+
+                // Visualización - Limpiar capa anterior
                 if (window.capaGeoJSON) {
                     map.removeLayer(window.capaGeoJSON);
                     // Limpiar predios anteriores de esta capa
                     prediosData = prediosData.filter(p => !p.fromUpload || p.fromUpload !== true);
                 }
 
-                // Crear nueva capa
+                // Crear nueva capa con el GeoJSON
                 window.capaGeoJSON = L.geoJSON(geojson, {
                     style: function () { return estiloDefault; },
                     onEachFeature: function (feature, layer) {
@@ -429,7 +636,7 @@
                     }
                 }).addTo(map);
 
-                // Ajustar vista a los nuevos predios
+                // Ajustar vista automáticamente (fitBounds)
                 map.fitBounds(window.capaGeoJSON.getBounds());
 
                 // Actualizar lista de predios
@@ -437,9 +644,10 @@
 
                 // Mostrar notificación de éxito
                 const cantidadPredios = geojson.features.length;
+                const tipoMensaje = tipoArchivo === 'kml' ? 'KML' : 'GeoJSON';
                 const mensaje = cantidadPredios === 1 
-                    ? "✅ 1 predio agregado" 
-                    : `✅ ${cantidadPredios} predios agregados`;
+                    ? `✅ 1 predio agregado (${tipoMensaje})` 
+                    : `✅ ${cantidadPredios} predios agregados (${tipoMensaje})`;
                 showNotification(mensaje);
 
                 // Limpiar input
