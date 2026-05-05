@@ -71,6 +71,10 @@
             .leaflet-popup-content {
                 font-size: 14px;
             }
+            .leaflet-control-layers {
+                margin-bottom: 150px !important; 
+                margin-left: 15px !important;
+            }
         }
     </style>
 </head>
@@ -149,7 +153,8 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-    var map = L.map('map').setView([7.125, -73.119], 13);
+// Le agregamos preferCanvas: true para optimizar el rendimiento con los KML
+    var map = L.map('map', { preferCanvas: true }).setView([7.125, -73.119], 13);
 
     // ==============================
     // CAPAS BASE
@@ -161,6 +166,14 @@
     var satelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
         attribution: 'Esri World Imagery'
     }).addTo(map);
+
+    var baseMaps = {
+        "🛰️ Satélite": satelite,
+        "🗺️ Calles": osm
+    };
+    
+    // Cambiamos el null por {} y guardamos el control en una variable
+    var controlCapas = L.control.layers(baseMaps, {}, { position: 'bottomleft' }).addTo(map);
 
     var capaSeleccionada = null;
     var prediosData = []; // Almacenar todos los predios
@@ -315,7 +328,7 @@
                 "Predios": capa
             };
 
-            L.control.layers(baseMaps, overlayMaps).addTo(map);
+            controlCapas.addOverlay(capa, "🏘️ Predios Iniciales");
 
             map.fitBounds(capa.getBounds());
 
@@ -582,11 +595,11 @@
                     throw new Error("El archivo no contiene datos válidos");
                 }
 
-                // Visualización - Limpiar capa anterior
+                // Guardar para exportación y limpiar mapa anterior
+                datosParaExportar = geojson;
                 if (window.capaGeoJSON) {
                     map.removeLayer(window.capaGeoJSON);
-                    // Limpiar predios anteriores de esta capa
-                    prediosData = prediosData.filter(p => !p.fromUpload || p.fromUpload !== true);
+                    controlCapas.removeLayer(window.capaGeoJSON); // Quita la versión vieja del menú
                 }
 
                 // Crear nueva capa con el GeoJSON
@@ -635,6 +648,8 @@
                         });
                     }
                 }).addTo(map);
+
+                controlCapas.addOverlay(window.capaGeoJSON, "🏘️ Predios Cargados");
 
                 // Ajustar vista automáticamente (fitBounds)
                 map.fitBounds(window.capaGeoJSON.getBounds());

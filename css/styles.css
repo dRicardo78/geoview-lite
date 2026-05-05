@@ -158,7 +158,7 @@ body {
 
 #controls {
   position: absolute;
-  bottom: 90px;
+  bottom: 150px;
   left: 10px;
   z-index: 2000;
   background: white;
